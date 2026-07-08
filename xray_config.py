@@ -3,9 +3,24 @@ import os
 import hashlib
 import secrets
 
+def get_domain():
+    """Get domain from environment variables"""
+    domain = (
+        os.environ.get("RAILWAY_PUBLIC_DOMAIN") or
+        os.environ.get("RAILWAY_STATIC_URL") or
+        os.environ.get("RENDER_EXTERNAL_HOSTNAME") or
+        os.environ.get("VERCEL_URL") or
+        os.environ.get("HEROKU_APP_NAME") and f"{os.environ.get('HEROKU_APP_NAME')}.herokuapp.com" or
+        os.environ.get("KOYEB_APP_NAME") and f"{os.environ.get('KOYEB_APP_NAME')}.koyeb.app" or
+        os.environ.get("FLY_APP_NAME") and f"{os.environ.get('FLY_APP_NAME')}.fly.dev" or
+        "localhost"
+    )
+    # Clean domain
+    domain = domain.replace("https://", "").replace("http://", "").split("/")[0]
+    return domain
+
 def generate_xray_config(uuid):
-    # دامنه خودکار از Railway گرفته میشه
-    host = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "localhost")
+    host = get_domain()
     
     config = {
         "log": {"loglevel": "warning"},
@@ -54,7 +69,7 @@ def get_default_uuid():
     return f"{uid[:8]}-{uid[8:12]}-{uid[12:16]}-{uid[16:20]}-{uid[20:32]}"
 
 def get_vless_link(uuid, protocol="xhttp"):
-    host = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "localhost")
+    host = get_domain()
     port = "8443" if protocol == "xhttp" else "8444"
     path = "/xhttp" if protocol == "xhttp" else "/ws"
     

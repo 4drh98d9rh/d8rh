@@ -1,6 +1,5 @@
 import os
 import uvicorn
-from fastapi import FastAPI
 from xray_handler import app
 
 if __name__ == "__main__":
