@@ -9,22 +9,21 @@ def get_domain():
         os.environ.get("RAILWAY_PUBLIC_DOMAIN") or
         os.environ.get("RAILWAY_STATIC_URL") or
         os.environ.get("RENDER_EXTERNAL_HOSTNAME") or
-        os.environ.get("VERCEL_URL") or
         "localhost"
     )
-    # Clean domain
     domain = domain.replace("https://", "").replace("http://", "").split("/")[0]
     return domain
 
 def generate_xray_config(uuid):
     host = get_domain()
+    port = int(os.environ.get("PORT", 8000))
     
     config = {
         "log": {"loglevel": "warning"},
         "inbounds": [
             {
                 "listen": "0.0.0.0",
-                "port": 8443,
+                "port": port,  # استفاده از پورت 8000
                 "protocol": "vless",
                 "settings": {
                     "clients": [{"id": uuid}],
@@ -32,7 +31,7 @@ def generate_xray_config(uuid):
                 },
                 "streamSettings": {
                     "network": "xhttp",
-                    "security": "none",  # <--- تغییر: غیرفعال کردن TLS
+                    "security": "none",
                     "xhttpSettings": {
                         "path": "/xhttp",
                         "host": host
@@ -41,7 +40,7 @@ def generate_xray_config(uuid):
             },
             {
                 "listen": "0.0.0.0",
-                "port": 8444,
+                "port": port,  # استفاده از پورت 8000
                 "protocol": "vless",
                 "settings": {
                     "clients": [{"id": uuid}],
@@ -49,7 +48,7 @@ def generate_xray_config(uuid):
                 },
                 "streamSettings": {
                     "network": "ws",
-                    "security": "none",  # <--- تغییر: غیرفعال کردن TLS
+                    "security": "none",
                     "wsSettings": {"path": "/ws"}
                 }
             }
@@ -65,8 +64,7 @@ def get_default_uuid():
 
 def get_vless_link(uuid, protocol="xhttp"):
     host = get_domain()
-    port = "8443" if protocol == "xhttp" else "8444"
+    port = os.environ.get("PORT", "8000")  # استفاده از پورت 8000
     path = "/xhttp" if protocol == "xhttp" else "/ws"
     
-    # حذف security=tls از لینک
-    return f"vless://{uuid}@{host}:{port}?encryption=none&type={protocol}&path={path}&host={host}#X4G-{protocol.upper()}"
+    return f"vless://{uuid}@{host}:{port}?encryption=none&type={protocol}&path={path}&host={host}&security=none#X4G-{protocol.upper()}"

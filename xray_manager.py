@@ -10,7 +10,7 @@ class XrayManager:
     def __init__(self):
         self.process = None
         self.config_path = "/tmp/xray-config.json"
-        self.xray_path = "/usr/local/bin/xray"  # مسیر مستقیم
+        self.xray_path = "/usr/local/bin/xray"
         self.started = False
     
     def start(self, config):
@@ -20,15 +20,17 @@ class XrayManager:
             with open(self.config_path, 'w') as f:
                 json.dump(config, f, indent=2)
             
-            # Check if Xray exists
             if not os.path.exists(self.xray_path):
                 logger.error(f"❌ Xray not found at {self.xray_path}")
                 return None
             
-            # Check if already running
             if self.process and self.process.poll() is None:
                 logger.warning("⚠️ Xray already running")
                 return self.process
+            
+            # Kill any existing process on the port
+            os.system("fuser -k 8000/tcp 2>/dev/null || true")
+            time.sleep(1)
             
             # Start Xray
             cmd = [self.xray_path, "-config", self.config_path]
@@ -41,10 +43,8 @@ class XrayManager:
                 text=True
             )
             
-            # Wait for startup
             time.sleep(2)
             
-            # Check if running
             if self.process.poll() is not None:
                 stdout, stderr = self.process.communicate()
                 error_msg = stderr or stdout or "Unknown error"
