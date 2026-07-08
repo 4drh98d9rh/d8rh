@@ -4,8 +4,7 @@ import os
 import base64
 import logging
 import sys
-import json
-from xray_config import generate_xray_config, get_default_uuid, get_vless_link, get_domain
+from xray_config import generate_xray_config, get_default_uuid, get_vless_link
 from xray_manager import XrayManager
 
 logging.basicConfig(
@@ -18,14 +17,14 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 xray_manager = XrayManager()
 DEFAULT_UUID = get_default_uuid()
-DOMAIN = get_domain()
+
+TCP_HOST = os.environ.get("TCP_DOMAIN", "reseau.proxy.rlwy.net")
+TCP_PORT = os.environ.get("TCP_PORT", "31489")
 
 logger.info("=" * 50)
 logger.info("🚀 X4G Xray Server Starting...")
-logger.info(f"🌐 Domain: {DOMAIN}")
 logger.info(f"🔑 UUID: {DEFAULT_UUID}")
-logger.info(f"🔌 API Port: 8080")
-logger.info(f"🔌 Xray Port: 8443")
+logger.info(f"🔌 TCP Proxy: {TCP_HOST}:{TCP_PORT}")
 logger.info("=" * 50)
 
 @app.on_event("startup")
@@ -50,16 +49,16 @@ async def shutdown():
 async def root():
     return {
         "status": "ok",
-        "domain": DOMAIN,
         "uuid": DEFAULT_UUID,
-        "api_port": 8080,
-        "xray_port": 8443,
+        "tcp_proxy": {
+            "host": TCP_HOST,
+            "port": TCP_PORT
+        },
         "links": {
             "xhttp": get_vless_link(DEFAULT_UUID, "xhttp"),
             "ws": get_vless_link(DEFAULT_UUID, "ws")
         },
-        "xray_status": xray_manager.get_status(),
-        "note": "API on port 8080, Xray on port 8443"
+        "xray_status": xray_manager.get_status()
     }
 
 @app.get("/sub/{uuid}")

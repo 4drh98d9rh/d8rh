@@ -3,7 +3,6 @@ import os
 import json
 import time
 import logging
-import socket
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,6 @@ class XrayManager:
     
     def start(self, config):
         try:
-            # Save config
             logger.info("💾 Saving config...")
             with open(self.config_path, 'w') as f:
                 json.dump(config, f, indent=2)
@@ -25,7 +23,10 @@ class XrayManager:
                 logger.error(f"❌ Xray not found at {self.xray_path}")
                 return None
             
-            # Start Xray in background
+            if self.process and self.process.poll() is None:
+                logger.warning("⚠️ Xray already running")
+                return self.process
+            
             cmd = [self.xray_path, "-config", self.config_path]
             logger.info(f"🚀 Starting Xray: {' '.join(cmd)}")
             
@@ -33,8 +34,7 @@ class XrayManager:
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
-                start_new_session=True  # اجرا در پس‌زمینه
+                text=True
             )
             
             time.sleep(3)

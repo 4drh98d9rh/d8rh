@@ -3,14 +3,7 @@
 echo "═══════════════════════════════════════════════════════════"
 echo "  🚀 X4G Xray Server"
 echo "═══════════════════════════════════════════════════════════"
-echo "  API PORT: 8080"
-echo "  XRAY PORT: 8443"
-echo "  DOMAIN: ${RAILWAY_PUBLIC_DOMAIN:-Not Set}"
+echo "  TCP PROXY: ${TCP_DOMAIN}:${TCP_PORT}"
 echo "═══════════════════════════════════════════════════════════"
-
-/usr/local/bin/xray -version
-
-echo "═══════════════════════════════════════════════════════════"
-echo "🚀 Starting application..."
 
 python main.py
