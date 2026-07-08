@@ -2,12 +2,19 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies including Xray
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
     curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Download and install Xray directly in Docker
+RUN wget -qO- https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip > /tmp/xray.zip \
+    && unzip -q /tmp/xray.zip -d /usr/local/bin/ \
+    && rm /tmp/xray.zip \
+    && chmod +x /usr/local/bin/xray
 
 # Copy requirements and install Python packages
 COPY requirements.txt .
