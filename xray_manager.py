@@ -14,23 +14,9 @@ class XrayManager:
         self.xray_path = "/usr/local/bin/xray"
         self.started = False
     
-    def _check_port(self, port):
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(1)
-            result = sock.connect_ex(('0.0.0.0', port))
-            sock.close()
-            return result != 0
-        except:
-            return False
-    
     def start(self, config):
         try:
-            if not self._check_port(8443):
-                logger.warning("⚠️ Port 8443 is in use, killing process...")
-                os.system("fuser -k 8443/tcp 2>/dev/null || true")
-                time.sleep(2)
-            
+            # Save config
             logger.info("💾 Saving config...")
             with open(self.config_path, 'w') as f:
                 json.dump(config, f, indent=2)
@@ -39,10 +25,7 @@ class XrayManager:
                 logger.error(f"❌ Xray not found at {self.xray_path}")
                 return None
             
-            if self.process and self.process.poll() is None:
-                logger.warning("⚠️ Xray already running")
-                return self.process
-            
+            # Start Xray in background
             cmd = [self.xray_path, "-config", self.config_path]
             logger.info(f"🚀 Starting Xray: {' '.join(cmd)}")
             
@@ -50,7 +33,8 @@ class XrayManager:
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
+                start_new_session=True  # اجرا در پس‌زمینه
             )
             
             time.sleep(3)
@@ -63,13 +47,6 @@ class XrayManager:
             
             self.started = True
             logger.info(f"✅ Xray started successfully (PID: {self.process.pid})")
-            
-            time.sleep(1)
-            if self._check_port(8443):
-                logger.warning("⚠️ Port 8443 is not listening!")
-            else:
-                logger.info("✅ Port 8443 is listening")
-            
             return self.process
             
         except Exception as e:

@@ -20,23 +20,33 @@ def generate_xray_config(uuid):
         "inbounds": [
             {
                 "listen": "0.0.0.0",
-                "port": 8443,  # فقط یک پورت
+                "port": 8443,  # Xray روی 8443
                 "protocol": "vless",
                 "settings": {
                     "clients": [{"id": uuid}],
                     "decryption": "none"
                 },
                 "streamSettings": {
-                    "network": "xhttp",  # پیش‌فرض XHTTP
+                    "network": "xhttp",
                     "security": "none",
                     "xhttpSettings": {
                         "path": "/xhttp",
                         "host": host
                     }
+                }
+            },
+            {
+                "listen": "0.0.0.0",
+                "port": 8443,  # WebSocket هم روی 8443
+                "protocol": "vless",
+                "settings": {
+                    "clients": [{"id": uuid}],
+                    "decryption": "none"
                 },
-                "sniffing": {
-                    "enabled": True,
-                    "destOverride": ["http", "tls"]
+                "streamSettings": {
+                    "network": "ws",
+                    "security": "none",
+                    "wsSettings": {"path": "/ws"}
                 }
             }
         ],
@@ -51,10 +61,7 @@ def get_default_uuid():
 
 def get_vless_link(uuid, protocol="xhttp"):
     host = get_domain()
-    port = "8443"  # فقط یک پورت
+    port = "8443"
+    path = "/xhttp" if protocol == "xhttp" else "/ws"
     
-    if protocol == "xhttp":
-        return f"vless://{uuid}@{host}:{port}?encryption=none&type=xhttp&path=/xhttp&host={host}&security=none#X4G-XHTTP"
-    elif protocol == "ws":
-        return f"vless://{uuid}@{host}:{port}?encryption=none&type=ws&path=/ws&host={host}&security=none#X4G-WS"
-    return None
+    return f"vless://{uuid}@{host}:{port}?encryption=none&type={protocol}&path={path}&host={host}&security=none#X4G-{protocol.upper()}"

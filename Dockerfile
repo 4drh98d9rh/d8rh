@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    wget unzip psmisc \
+    wget unzip \
     && rm -rf /var/lib/apt/lists/* \
     && wget -qO- https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip > /tmp/xray.zip \
     && unzip -q /tmp/xray.zip -d /usr/local/bin/ \

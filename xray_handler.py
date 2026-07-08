@@ -24,7 +24,8 @@ logger.info("=" * 50)
 logger.info("🚀 X4G Xray Server Starting...")
 logger.info(f"🌐 Domain: {DOMAIN}")
 logger.info(f"🔑 UUID: {DEFAULT_UUID}")
-logger.info(f"🔌 Port: 8443 (XHTTP & WebSocket)")
+logger.info(f"🔌 API Port: 8080")
+logger.info(f"🔌 Xray Port: 8443")
 logger.info("=" * 50)
 
 @app.on_event("startup")
@@ -51,13 +52,14 @@ async def root():
         "status": "ok",
         "domain": DOMAIN,
         "uuid": DEFAULT_UUID,
-        "port": 8443,
+        "api_port": 8080,
+        "xray_port": 8443,
         "links": {
             "xhttp": get_vless_link(DEFAULT_UUID, "xhttp"),
             "ws": get_vless_link(DEFAULT_UUID, "ws")
         },
         "xray_status": xray_manager.get_status(),
-        "note": "Both XHTTP and WebSocket work on port 8443"
+        "note": "API on port 8080, Xray on port 8443"
     }
 
 @app.get("/sub/{uuid}")
@@ -86,12 +88,3 @@ async def health():
         "status": "healthy",
         "xray": xray_manager.get_status()
     }
-
-@app.get("/config")
-async def get_config():
-    try:
-        with open("/tmp/xray-config.json", "r") as f:
-            config = json.load(f)
-        return config
-    except:
-        return {"error": "Config not found"}
