@@ -20,33 +20,23 @@ def generate_xray_config(uuid):
         "inbounds": [
             {
                 "listen": "0.0.0.0",
-                "port": 8443,  # Xray روی پورت 8443
+                "port": 8443,  # فقط یک پورت
                 "protocol": "vless",
                 "settings": {
                     "clients": [{"id": uuid}],
                     "decryption": "none"
                 },
                 "streamSettings": {
-                    "network": "xhttp",
+                    "network": "xhttp",  # پیش‌فرض XHTTP
                     "security": "none",
                     "xhttpSettings": {
                         "path": "/xhttp",
                         "host": host
                     }
-                }
-            },
-            {
-                "listen": "0.0.0.0",
-                "port": 8444,  # WebSocket روی پورت 8444
-                "protocol": "vless",
-                "settings": {
-                    "clients": [{"id": uuid}],
-                    "decryption": "none"
                 },
-                "streamSettings": {
-                    "network": "ws",
-                    "security": "none",
-                    "wsSettings": {"path": "/ws"}
+                "sniffing": {
+                    "enabled": True,
+                    "destOverride": ["http", "tls"]
                 }
             }
         ],
@@ -61,7 +51,10 @@ def get_default_uuid():
 
 def get_vless_link(uuid, protocol="xhttp"):
     host = get_domain()
-    port = "8443" if protocol == "xhttp" else "8444"
-    path = "/xhttp" if protocol == "xhttp" else "/ws"
+    port = "8443"  # فقط یک پورت
     
-    return f"vless://{uuid}@{host}:{port}?encryption=none&type={protocol}&path={path}&host={host}&security=none#X4G-{protocol.upper()}"
+    if protocol == "xhttp":
+        return f"vless://{uuid}@{host}:{port}?encryption=none&type=xhttp&path=/xhttp&host={host}&security=none#X4G-XHTTP"
+    elif protocol == "ws":
+        return f"vless://{uuid}@{host}:{port}?encryption=none&type=ws&path=/ws&host={host}&security=none#X4G-WS"
+    return None

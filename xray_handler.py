@@ -19,19 +19,17 @@ app = FastAPI()
 xray_manager = XrayManager()
 DEFAULT_UUID = get_default_uuid()
 DOMAIN = get_domain()
-PORT = os.environ.get("PORT", "8080")
 
 logger.info("=" * 50)
 logger.info("🚀 X4G Xray Server Starting...")
 logger.info(f"🌐 Domain: {DOMAIN}")
 logger.info(f"🔑 UUID: {DEFAULT_UUID}")
-logger.info(f"🔌 Web Port: {PORT}")
-logger.info(f"🔌 Xray Ports: 8443 (XHTTP), 8444 (WS)")
+logger.info(f"🔌 Port: 8443 (XHTTP & WebSocket)")
 logger.info("=" * 50)
 
 @app.on_event("startup")
 async def startup():
-    logger.info("🚀 Starting application...")
+    logger.info("🚀 Starting Xray...")
     try:
         config = generate_xray_config(DEFAULT_UUID)
         result = xray_manager.start(config)
@@ -52,18 +50,14 @@ async def root():
     return {
         "status": "ok",
         "domain": DOMAIN,
-        "web_port": PORT,
-        "xray_ports": {
-            "xhttp": 8443,
-            "ws": 8444
-        },
         "uuid": DEFAULT_UUID,
+        "port": 8443,
         "links": {
             "xhttp": get_vless_link(DEFAULT_UUID, "xhttp"),
             "ws": get_vless_link(DEFAULT_UUID, "ws")
         },
         "xray_status": xray_manager.get_status(),
-        "note": "Xray is running on ports 8443 (XHTTP) and 8444 (WS)"
+        "note": "Both XHTTP and WebSocket work on port 8443"
     }
 
 @app.get("/sub/{uuid}")
@@ -90,13 +84,11 @@ async def subscription(uuid: str):
 async def health():
     return {
         "status": "healthy",
-        "xray": xray_manager.get_status(),
-        "web_port": PORT
+        "xray": xray_manager.get_status()
     }
 
 @app.get("/config")
 async def get_config():
-    """نمایش کانفیگ فعلی Xray"""
     try:
         with open("/tmp/xray-config.json", "r") as f:
             config = json.load(f)
