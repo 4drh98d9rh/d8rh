@@ -4,9 +4,9 @@ import os
 import base64
 import logging
 import sys
+import json
 from xray_config import generate_xray_config, get_default_uuid, get_vless_link, get_domain
 from xray_manager import XrayManager
-import json
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,13 +19,14 @@ app = FastAPI()
 xray_manager = XrayManager()
 DEFAULT_UUID = get_default_uuid()
 DOMAIN = get_domain()
-PORT = os.environ.get("PORT", "8000")
+PORT = os.environ.get("PORT", "8080")
 
 logger.info("=" * 50)
 logger.info("🚀 X4G Xray Server Starting...")
 logger.info(f"🌐 Domain: {DOMAIN}")
 logger.info(f"🔑 UUID: {DEFAULT_UUID}")
-logger.info(f"🔌 Port: {PORT}")
+logger.info(f"🔌 Web Port: {PORT}")
+logger.info(f"🔌 Xray Ports: 8443 (XHTTP), 8444 (WS)")
 logger.info("=" * 50)
 
 @app.on_event("startup")
@@ -51,14 +52,18 @@ async def root():
     return {
         "status": "ok",
         "domain": DOMAIN,
-        "port": PORT,
+        "web_port": PORT,
+        "xray_ports": {
+            "xhttp": 8443,
+            "ws": 8444
+        },
         "uuid": DEFAULT_UUID,
         "links": {
             "xhttp": get_vless_link(DEFAULT_UUID, "xhttp"),
             "ws": get_vless_link(DEFAULT_UUID, "ws")
         },
         "xray_status": xray_manager.get_status(),
-        "note": "Use port 8000 (not 443) in your client"
+        "note": "Xray is running on ports 8443 (XHTTP) and 8444 (WS)"
     }
 
 @app.get("/sub/{uuid}")
@@ -86,7 +91,7 @@ async def health():
     return {
         "status": "healthy",
         "xray": xray_manager.get_status(),
-        "port": PORT
+        "web_port": PORT
     }
 
 @app.get("/config")

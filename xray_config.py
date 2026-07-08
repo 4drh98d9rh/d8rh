@@ -4,11 +4,9 @@ import hashlib
 import secrets
 
 def get_domain():
-    """Get domain from environment variables"""
     domain = (
         os.environ.get("RAILWAY_PUBLIC_DOMAIN") or
         os.environ.get("RAILWAY_STATIC_URL") or
-        os.environ.get("RENDER_EXTERNAL_HOSTNAME") or
         "localhost"
     )
     domain = domain.replace("https://", "").replace("http://", "").split("/")[0]
@@ -16,14 +14,13 @@ def get_domain():
 
 def generate_xray_config(uuid):
     host = get_domain()
-    port = int(os.environ.get("PORT", 8000))
     
     config = {
         "log": {"loglevel": "warning"},
         "inbounds": [
             {
                 "listen": "0.0.0.0",
-                "port": port,  # استفاده از پورت 8000
+                "port": 8443,  # Xray روی پورت 8443
                 "protocol": "vless",
                 "settings": {
                     "clients": [{"id": uuid}],
@@ -40,7 +37,7 @@ def generate_xray_config(uuid):
             },
             {
                 "listen": "0.0.0.0",
-                "port": port,  # استفاده از پورت 8000
+                "port": 8444,  # WebSocket روی پورت 8444
                 "protocol": "vless",
                 "settings": {
                     "clients": [{"id": uuid}],
@@ -64,7 +61,7 @@ def get_default_uuid():
 
 def get_vless_link(uuid, protocol="xhttp"):
     host = get_domain()
-    port = os.environ.get("PORT", "8000")  # استفاده از پورت 8000
+    port = "8443" if protocol == "xhttp" else "8444"
     path = "/xhttp" if protocol == "xhttp" else "/ws"
     
     return f"vless://{uuid}@{host}:{port}?encryption=none&type={protocol}&path={path}&host={host}&security=none#X4G-{protocol.upper()}"
